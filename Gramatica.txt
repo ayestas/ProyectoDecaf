@@ -1,0 +1,91 @@
+input -> programa
+
+programa -> KW_CLASS IDENT OPEN_CURLY programa_cuerpo CLOSE_CURLY
+
+programa_cuerpo -> funcion
+                 | %empty
+
+funcion -> KW_INT IDENT OPEN_PAR param_list CLOSE_PAR 
+           OPEN_CURLY
+           (var_decl SEMICOLON)*
+           (declaraciones)*
+           CLOSE_CURLY 
+
+param_list -> param (COMMA param)*
+            | %empty
+
+param -> KW_INT IDENT
+
+var_decl -> KW_INT IDENT array ( COMMA IDENT array )*
+
+array -> OPEN_BRACKET CONST_INT CLOSE_BRACKET
+       | %empty
+
+declaraciones -> decl_assign
+               | decl_if
+               | decl_while
+               | decl_for
+               | decl_print
+
+decl_assign -> IDENT OP_ASSIGN expr
+             | IDENT ( OPEN_BRACKET expr CLOSE_BRACKET )? OP_ASSIGN expr
+
+decl_if ->  KW_IF OPEN_PAR expr CLOSE_PAR
+            OPEN_CURLY
+            ( stmt SEMICOLON )*
+            CLOSE_CURLY
+            ( 
+             KW_ELSE
+             OPEN_CURLY
+             ( stmt SEMICOLON )*
+             CLOSE_CURLY
+            )?
+
+decl_while -> KW_WHILE OPEN_PAR expr CLOSE_PAR
+              OPEN_CURLY
+              ( stmt SEMICOLON )*
+              CLOSE_CURLY
+
+decl_for -> KW_FOR 
+            OPEN_PAR 
+              KW_INT IDENT OP_ASSIGN CONST_INT SEMICOLON
+              rel_expr SEMICOLON
+              const_variation 
+            CLOSE_PAR
+            OPEN_CURLY
+              declaraciones
+            CLOSE_CURLY
+
+decl_print -> (KW_SOUT | KW_SOUTLN) OPEN_PAR STRING_LITERAL CLOSE_PAR
+
+const_variation -> IDENT INCREMENT
+                 | IDENT DECREMENT
+                 | INCREMENT IDENT
+                 | DECREMENT IDENT
+
+expr -> bool_term ( BOOL_OR bool_term )*
+
+bool_term -> rel_expr ( BOOL_AND rel_expr )*
+
+rel_expr -> arith_expr GT arith_expr
+          | arith_expr LT arith_expr
+          | arith_expr GET arith_expr
+          | arith_expr LET arith_expr
+          | arith_expr NE arith_expr
+          | arith_expr EQ arith_expr
+          | arith_expr
+
+arith_expr -> arith_term ( (OP_ADD | OP_SUB) arith_term )*
+
+arith_term -> arith_factor ( (OP_MUL | OP_DIV | OP_MOD) arith_factor )*
+
+arith_factor -> CONST_INT
+              | IDENT (
+                    (OPEN_BRACKET expr CLOSE_BRACKET)
+                    |
+                    (OPEN_PAR expr_list CLOSE_PAR)
+                )?
+              | OPEN_PAR expr CLOSE_PAR
+
+expr_list -> expr ( COMMA expr )*
+           | %empty
