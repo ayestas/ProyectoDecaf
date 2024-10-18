@@ -21,36 +21,36 @@ var_decl -> KW_INT IDENT array ( COMMA IDENT array )*
 array -> OPEN_BRACKET CONST_INT CLOSE_BRACKET
        | %empty
 
-declaraciones -> decl_assign
+declaraciones -> decl_assign SEMICOLON
                | decl_if
                | decl_while
                | decl_for
-               | decl_print
+               | decl_print SEMICOLON
 
 decl_assign -> IDENT OP_ASSIGN expr
              | IDENT ( OPEN_BRACKET expr CLOSE_BRACKET )? OP_ASSIGN expr
 
 decl_if ->  KW_IF OPEN_PAR expr CLOSE_PAR
             OPEN_CURLY
-            ( stmt SEMICOLON )*
+            ( declaraciones )*
             CLOSE_CURLY
             ( 
              KW_ELSE
              OPEN_CURLY
-             ( stmt SEMICOLON )*
+             ( declaraciones )*
              CLOSE_CURLY
             )?
 
 decl_while -> KW_WHILE OPEN_PAR expr CLOSE_PAR
               OPEN_CURLY
-              ( stmt SEMICOLON )*
+              ( declaraciones )*
               CLOSE_CURLY
 
 decl_for -> KW_FOR 
             OPEN_PAR 
-              KW_INT IDENT OP_ASSIGN CONST_INT SEMICOLON
-              rel_expr SEMICOLON
-              const_variation 
+              KW_INT IDENT OP_ASSIGN expr SEMICOLON
+              expr SEMICOLON
+              IDENT OP_ASSIGN expr 
             CLOSE_PAR
             OPEN_CURLY
               declaraciones
