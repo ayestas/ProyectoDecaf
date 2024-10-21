@@ -2,8 +2,7 @@ input -> programa
 
 programa -> KW_CLASS IDENT OPEN_CURLY programa_cuerpo CLOSE_CURLY
 
-programa_cuerpo -> funcion
-                 | %empty
+programa_cuerpo -> (funcion)*
 
 funcion -> KW_INT IDENT OPEN_PAR param_list CLOSE_PAR 
            OPEN_CURLY
@@ -14,7 +13,7 @@ funcion -> KW_INT IDENT OPEN_PAR param_list CLOSE_PAR
 param_list -> param (COMMA param)*
             | %empty
 
-param -> KW_INT IDENT
+param -> (KW_REF)* KW_INT IDENT
 
 var_decl -> KW_INT IDENT array ( COMMA IDENT array )*
 
@@ -58,11 +57,6 @@ decl_for -> KW_FOR
 
 decl_print -> (KW_SOUT | KW_SOUTLN) OPEN_PAR STRING_LITERAL CLOSE_PAR
 
-const_variation -> IDENT INCREMENT
-                 | IDENT DECREMENT
-                 | INCREMENT IDENT
-                 | DECREMENT IDENT
-
 expr -> bool_term ( BOOL_OR bool_term )*
 
 bool_term -> rel_expr ( BOOL_AND rel_expr )*
@@ -86,6 +80,7 @@ arith_factor -> CONST_INT
                     (OPEN_PAR expr_list CLOSE_PAR)
                 )?
               | OPEN_PAR expr CLOSE_PAR
+              | KW_READ OPEN_PAR CLOSE_PAR
 
 expr_list -> expr ( COMMA expr )*
            | %empty
