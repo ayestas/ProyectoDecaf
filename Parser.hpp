@@ -9,6 +9,9 @@ public:
 
   void parse();
 
+  void programa();
+
+
 private:
   Lexer &lexer;
   Token currentToken;

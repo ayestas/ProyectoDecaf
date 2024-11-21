@@ -7,6 +7,7 @@
     "*.cxx.re": "cpp",
     "*.go.re": "go",
     "*.rs.re": "rust",
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "iostream": "cpp"
   }
 }

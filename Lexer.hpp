@@ -8,9 +8,9 @@ enum Token
 {
   Eof,
   Error,
-  Eol,
   // Keywords
   KW_IF,
+  KW_CLASS,
   KW_ELSE,
   KW_WHILE,
   KW_FOR,

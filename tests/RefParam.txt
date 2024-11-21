@@ -1,0 +1,16 @@
+class Example {
+    int main() {
+        int x = 10;
+        int y = 20;
+        swap(x, y);
+        System.out.print(x);
+        System.out.print(y);
+    }
+
+    void swap(ref int a, ref int b) {
+        int temp;
+        temp = a;
+        a = b;
+        b = temp;
+    }
+}

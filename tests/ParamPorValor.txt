@@ -1,0 +1,46 @@
+class ParameterByValueComplexTest {
+    int main() {
+        int a, b, sumResult, productResult;
+		a = 5;
+        b = 10;
+
+        System.out.print("Before calling calculateSum: a = ");
+		System.out.print(a);
+		System.out.print(", b = ");
+		System.out.println(b);
+
+        // Call the function with a and b
+		sumResult = calculateSum(a, b);
+
+        // The values of a and b should remain unchanged
+        System.out.print("After calling calculateSum: a = ");
+		System.out.print(a);
+		System.out.print(", b = ");
+		System.out.println(b);
+        System.out.print("The sum is: ");
+		System.out.println(sumResult);
+
+        // Call another function to test more calculations
+        productResult = calculateProduct(a, b);
+        System.out.print("The product is: ");
+		System.out.println(productResult);
+
+        return 0;
+    }
+
+    int calculateSum(int x, int y) {
+        int sum; 
+		sum = x + y; // Calculate the sum
+        System.out.print("Inside calculateSum: x + y = ");
+		System.out.println(sum);
+        return sum; // Return the sum
+    }
+
+    int calculateProduct(int x, int y) {
+        int product; 
+		product = x * y; // Calculate the product
+        System.out.print("Inside calculateProduct: x * y = ");
+        System.out.println(product);
+		return product; // Return the product
+    }
+}

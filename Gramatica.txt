@@ -1,8 +1,4 @@
-input -> programa
-
-programa -> KW_CLASS IDENT OPEN_CURLY programa_cuerpo CLOSE_CURLY
-
-programa_cuerpo -> (funcion)*
+programa -> KW_CLASS IDENT OPEN_CURLY (funcion)* CLOSE_CURLY
 
 funcion -> KW_INT IDENT OPEN_PAR param_list CLOSE_PAR 
            OPEN_CURLY
