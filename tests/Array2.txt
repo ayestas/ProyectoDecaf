@@ -1,7 +1,6 @@
 class ArrayExample {
     int main() {
-        int numbers[5];
-        int i;
+        int numbers[5], i;
         // Initialize the array
         for (i = 0; i < 5; i = i + 1) {
             numbers[i] = i * 10;

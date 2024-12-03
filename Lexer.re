@@ -46,18 +46,19 @@ bool Lexer::InputBuffer::fill(size_t need)
   return true;
 }
 
-const std::string kw_if = "if";
 const std::string kw_class = "class";
+const std::string kw_int = "int";
+const std::string kw_if = "if";
 const std::string kw_else = "else";
 const std::string kw_while = "while";
 const std::string kw_for = "for";
-const std::string kw_int = "int";
+const std::string kw_read = "read";
 const std::string kw_sout = "System.out.print";
 const std::string kw_soutln = "System.out.println";
 
 Token Lexer::nextToken()
 {
-  while (true)
+  while(true)
   {
     inbuff.tok = inbuff.cur;
     /*!re2c
@@ -75,21 +76,22 @@ Token Lexer::nextToken()
         // Comentarios
         comment_block = "/*" [^*]* "*" ("*" [^/]* "/*" [^*]* "*")* "/";
         comment_line = "//" [^\n]*;
+      
+        // Keywords
+        kw_class = "class";
+        kw_int = "int";
+        kw_if = "if";
+        kw_else = "else";
+        kw_while = "while";
+        kw_for = "for";
+        kw_read = "read";
+        kw_sout = "System.out.print";
+        kw_soutln = "System.out.println";
 
         // Datos
         number = [0-9]+("." [0-9]+)?;
         ident = [a-zA-Z_][a-zA-Z0-9_]*;
         string = "\"" [^\"]* "\"";
-
-        // Keywords
-        kw_if = "if";
-        kw_class = "class";
-        kw_else = "else";
-        kw_while = "while";
-        kw_cout = "std::cout";
-        kw_cin = "std::cin";
-        kw_endl = "std::endl";
-        kw_int = "int";
 
         // Símbolos
         comma = ",";
@@ -101,9 +103,7 @@ Token Lexer::nextToken()
         close_bracket = "]";
         open_curly = "{";
         close_curly = "}";
-        op_assign = "=";
-        lt_lt = "<<";
-        gt_gt = ">>";
+        assign = "=";
 
         // Operadores de comparación
         gt = ">";
@@ -115,61 +115,67 @@ Token Lexer::nextToken()
         bool_or = "||";
         bool_and = "&&";
 
-        // Operadores Aritméticos
+        // Operadores aritméticos
         op_add = "+";
         op_sub = "-";
         op_mul = "*";
         op_div = "/";
         op_mod = "%";
 
-        "class" { text = inbuff.tokenText(); return Token::KW_CLASS; }
+        "System.out.print"    { text = inbuff.tokenText(); return Token::KW_SOUT; }
+        "System.out.println"    { text = inbuff.tokenText(); return Token::KW_SOUTLN; }
 
         // Datos
         number { text = inbuff.tokenText(); return Token::NUMBER; }
         ident {
-            text = inbuff.tokenText();
-            if (text == kw_if) return Token::KW_IF;
-            if (text == kw_class) return Token::KW_CLASS;
-            if (text == kw_else) return Token::KW_ELSE;
-            if (text == kw_while) return Token::KW_WHILE;
-            if (text == kw_int) return Token::KW_INT;
-            return Token::IDENT;
+          text = inbuff.tokenText();
+          if (text == kw_class) return Token::KW_CLASS;
+          else if (text == kw_int) return Token::KW_INT;
+          else if (text == kw_if) return Token::KW_IF;
+          else if (text == kw_else) return Token::KW_ELSE;
+          else if (text == kw_while) return Token::KW_WHILE;
+          else if (text == kw_for) return Token::KW_FOR;
+          else if (text == kw_read) return Token::KW_READ;
+          else if (text == kw_sout) return Token::KW_SOUT;
+          else if (text == kw_soutln) return Token::KW_SOUTLN;
+          else return Token::IDENT;
         }
         string { text = inbuff.tokenText(); return Token::STRING_LITERAL; }
 
         comment_block | comment_line { continue; }
 
-        // Símbolos
-        comma           { return Token::COMMA; }
-        semicolon       { return Token::SEMICOLON; }
-        ampersand       { return Token::AMPERSAND; }
-        open_par        { return Token::OPEN_PAR; }
-        close_par       { return Token::CLOSE_PAR; }
-        open_bracket    { return Token::OPEN_BRACKET; }
-        close_bracket   { return Token::CLOSE_BRACKET; }
-        open_curly      { return Token::OPEN_CURLY; }
-        close_curly     { return Token::CLOSE_CURLY; }
-        op_assign       { return Token::OP_ASSIGN; }
+        comma         { return Token::COMMA; }
+        semicolon     { return Token::SEMICOLON; }
+        ampersand     { return Token::AMPERSAND; }
+        open_par      { return Token::OPEN_PAR; }
+        close_par     { return Token::CLOSE_PAR; }
+        open_bracket  { return Token::OPEN_BRACKET; }
+        close_bracket { return Token::CLOSE_BRACKET; }
+        open_curly    { return Token::OPEN_CURLY; }
+        close_curly   { return Token::CLOSE_CURLY; }
+        assign        { return Token::ASSIGN; }
 
-        // Operadores Lógicos
-        gt              { return Token::GT; }
-        lt              { return Token::LT; }
-        get             { return Token::GET; }
-        let             { return Token::LET; }
-        eq              { return Token::EQ; }
-        ne              { return Token::NE; }
-        bool_or         { return Token::BOOL_OR; }
-        bool_and        { return Token::BOOL_AND; }
+        // Operadores de comparación
+        gt { return Token::GT; }
+        lt { return Token::LT; }
+        get { return Token::GET; }
+        let { return Token::LET; }
+        eq { return Token::EQ; }
+        ne { return Token::NE; }
+        bool_or { return Token::BOOL_OR; }
+        bool_and { return Token::BOOL_AND; }
 
-        // Operadores Aritméticos
-        op_add          { return Token::OP_ADD; }
-        op_sub          { return Token::OP_SUB; }
-        op_mul          { return Token::OP_MUL; }
-        op_div          { return Token::OP_DIV; }
-        op_mod          { return Token::OP_MOD; }
+        // Operadores aritméticos
+        op_add { return Token::OP_ADD; }
+        op_sub { return Token::OP_SUB; }
+        op_mul { return Token::OP_MUL; }
+        op_div { return Token::OP_DIV; }
+        op_mod { return Token::OP_MOD; }
 
-        end             { return (YYMAXFILL == inbuff.lim - inbuff.tok)? Token::Eof : Token::Error; }
-        wsp             { continue; }
+        [ \t\n] { continue; }
+        end     { return (YYMAXFILL == inbuff.lim - inbuff.tok)? Token::Eof : Token::Error; }
+        wsp     { continue; }
+        eol     { ++line; continue; }
     */
   }
 }

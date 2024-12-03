@@ -8,16 +8,18 @@ enum Token
 {
   Eof,
   Error,
-  // Keywords
-  KW_IF,
+  Eol,
+  // KEYWORDS
   KW_CLASS,
+  KW_INT,
+  KW_IF,
   KW_ELSE,
   KW_WHILE,
   KW_FOR,
-  KW_INT,
+  KW_READ,
   KW_SOUT,
   KW_SOUTLN,
-  // Símbolos
+  //SIMBOLOS
   COMMA,
   SEMICOLON,
   AMPERSAND,
@@ -27,10 +29,8 @@ enum Token
   CLOSE_BRACKET,
   OPEN_CURLY,
   CLOSE_CURLY,
-  OP_ASSIGN,
-  INCREMENT,
-  DECREMENT,
-  // Operadores Lógicos
+  ASSIGN,
+  // OPERADORES DE COMPARACIÓN
   GT,
   LT,
   GET,
@@ -39,13 +39,13 @@ enum Token
   NE,
   BOOL_OR,
   BOOL_AND,
-  // Operadores Aritméticos
+  // OPERADORES ARITMÉTICOS
   OP_ADD,
   OP_SUB,
   OP_MUL,
   OP_DIV,
   OP_MOD,
-  // Datos
+  // DATOS
   IDENT,
   NUMBER,
   STRING_LITERAL
