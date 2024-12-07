@@ -25,7 +25,6 @@ class ParameterByValueComplexTest {
         System.out.print("The product is: ");
 		System.out.println(productResult);
 
-        return 0;
     }
 
     int calculateSum(int x, int y) {
@@ -33,7 +32,6 @@ class ParameterByValueComplexTest {
 		sum = x + y; // Calculate the sum
         System.out.print("Inside calculateSum: x + y = ");
 		System.out.println(sum);
-        return sum; // Return the sum
     }
 
     int calculateProduct(int x, int y) {
@@ -41,6 +39,5 @@ class ParameterByValueComplexTest {
 		product = x * y; // Calculate the product
         System.out.print("Inside calculateProduct: x * y = ");
         System.out.println(product);
-		return product; // Return the product
     }
 }

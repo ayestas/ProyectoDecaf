@@ -1,7 +1,8 @@
 class RelationalOperatorsTest {
     int main() {
-        int a = 10;
-        int b = 20;
+        int a, b;
+        a = 10;
+        b = 20;
         
         System.out.println("Testing relational operators between a = 10 and b = 20:");
         

@@ -17,7 +17,7 @@ void Parser::programa()
       currentToken = lexer.nextToken();
       continue;
     }
-    
+
     class_declaration();
   }
 };
@@ -33,8 +33,7 @@ void Parser::class_declaration()
 
     ErrorEval(Token::OPEN_CURLY, "Expected '{'");
     currentToken = lexer.nextToken();
-    
-    std::cout << "Current Token: " << lexer.tokenText() << std::endl;
+
     funcion();
 
     if (currentToken == Token::KW_INT)
@@ -42,7 +41,6 @@ void Parser::class_declaration()
       while (currentToken == Token::KW_INT)
       {
         funcion();
-        currentToken = lexer.nextToken();
       }
     }
 
@@ -79,12 +77,12 @@ void Parser::funcion()
     {
       var_decl();
       ErrorEval(Token::SEMICOLON, "Expected ';'");
+      currentToken = lexer.nextToken();
     }
 
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
       declaraciones();
-      ErrorEval(Token::SEMICOLON, "Expected ';'");
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -107,38 +105,39 @@ void Parser::param_list()
       param();
     }
   }
+  else if (currentToken == Token::KW_REF)
+  {
+    currentToken = lexer.nextToken();
+    param();
+    while (currentToken == Token::COMMA)
+    {
+      currentToken = lexer.nextToken();
+      param();
+    }
+  }
 }
 
 void Parser::param()
 {
-  if (currentToken == Token::KW_INT)
+  if (currentToken == Token::KW_REF)
   {
     currentToken = lexer.nextToken();
-    if (currentToken == Token::AMPERSAND)
-    {
-      currentToken = lexer.nextToken();
 
-      ErrorEval(Token::IDENT, "Expected IDENT");
-      currentToken = lexer.nextToken();
+    ErrorEval(Token::KW_INT, "Expected KW_INT");
+    currentToken = lexer.nextToken();
+  }
+  else if (currentToken == Token::KW_INT)
+  {
+    currentToken = lexer.nextToken();
+  }
 
-      if (currentToken == Token::OPEN_BRACKET)
-      {
-        currentToken = lexer.nextToken();
-        ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
-        currentToken = lexer.nextToken();
-      }
-    }
-    else
-    {
-      ErrorEval(Token::IDENT, "Expected IDENT");
-      currentToken = lexer.nextToken();
-      if (currentToken == Token::OPEN_BRACKET)
-      {
-        currentToken = lexer.nextToken();
-        ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
-        currentToken = lexer.nextToken();
-      }
-    }
+  ErrorEval(Token::IDENT, "Expected IDENT");
+  currentToken = lexer.nextToken();
+  if (currentToken == Token::OPEN_BRACKET)
+  {
+    currentToken = lexer.nextToken();
+    ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
+    currentToken = lexer.nextToken();
   }
 }
 
@@ -193,8 +192,14 @@ void Parser::array()
 {
   currentToken = lexer.nextToken();
 
-  ErrorEval(Token::NUMBER, "Expected NUMBER");
-  currentToken = lexer.nextToken();
+  if (currentToken == Token::NUMBER || currentToken == Token::IDENT)
+  {
+    currentToken = lexer.nextToken();
+  }
+  else
+  {
+    throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected NUMBER or IDENT");
+  }
 
   ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
   currentToken = lexer.nextToken();
@@ -205,7 +210,28 @@ void Parser::declaraciones()
   switch (currentToken)
   {
   case Token::IDENT:
-    decl_assign();
+    currentToken = lexer.nextToken();
+    if (currentToken == Token::OPEN_PAR)
+    {
+      currentToken = lexer.nextToken();
+      expr_list();
+      ErrorEval(Token::CLOSE_PAR, "Expected ')'");
+      currentToken = lexer.nextToken();
+    }
+    else if (currentToken == Token::OPEN_BRACKET)
+    {
+      currentToken = lexer.nextToken();
+      expr();
+      ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
+      currentToken = lexer.nextToken();
+      decl_assign();
+    }
+    else
+    {
+      decl_assign();
+    }
+    ErrorEval(Token::SEMICOLON, "Expected ';'");
+    currentToken = lexer.nextToken();
     break;
   case Token::KW_IF:
     decl_if();
@@ -216,8 +242,15 @@ void Parser::declaraciones()
   case Token::KW_FOR:
     decl_for();
     break;
-  case Token::KW_SOUT || Token::KW_SOUTLN:
+  case Token::KW_SOUT:
     decl_print();
+    ErrorEval(Token::SEMICOLON, "Expected ';'");
+    currentToken = lexer.nextToken();
+    break;
+  case Token::KW_SOUTLN:
+    decl_print();
+    ErrorEval(Token::SEMICOLON, "Expected ';'");
+    currentToken = lexer.nextToken();
     break;
 
   default:
@@ -227,11 +260,8 @@ void Parser::declaraciones()
 
 void Parser::decl_assign()
 {
-  currentToken = lexer.nextToken();
-
   ErrorEval(Token::ASSIGN, "Expected '='");
   currentToken = lexer.nextToken();
-
   expr();
 }
 
@@ -253,7 +283,6 @@ void Parser::decl_if()
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
       declaraciones();
-      ErrorEval(Token::SEMICOLON, "Expected ';'");
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -268,7 +297,6 @@ void Parser::decl_if()
       while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
       {
         declaraciones();
-        ErrorEval(Token::SEMICOLON, "Expected ';'");
       }
 
       ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -299,7 +327,6 @@ void Parser::decl_while()
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
       declaraciones();
-      ErrorEval(Token::SEMICOLON, "Expected ';'");
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -319,11 +346,17 @@ void Parser::decl_for()
   {
     currentToken = lexer.nextToken();
 
-    ErrorEval(Token::KW_INT, "Expected int");
-    currentToken = lexer.nextToken();
+    if (currentToken == Token::KW_INT)
+    {
+      currentToken = lexer.nextToken();
 
-    ErrorEval(Token::IDENT, "Expected IDENT");
-    currentToken = lexer.nextToken();
+      ErrorEval(Token::IDENT, "Expected IDENT");
+      currentToken = lexer.nextToken();
+    }
+    else if (currentToken == Token::IDENT)
+    {
+      currentToken = lexer.nextToken();
+    }
 
     ErrorEval(Token::ASSIGN, "Expected '='");
     currentToken = lexer.nextToken();
@@ -355,7 +388,6 @@ void Parser::decl_for()
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
       declaraciones();
-      ErrorEval(Token::SEMICOLON, "Expected ';'");
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -375,8 +407,20 @@ void Parser::decl_print()
   {
     currentToken = lexer.nextToken();
 
-    ErrorEval(Token::STRING_LITERAL, "Expected STRING");
-    currentToken = lexer.nextToken();
+    if (currentToken == Token::IDENT)
+    {
+      currentToken = lexer.nextToken();
+
+      if (currentToken == Token::OPEN_BRACKET)
+      {
+        array();
+      }
+    }
+    else
+    {
+      ErrorEval(Token::STRING_LITERAL, "Expected STRING");
+      currentToken = lexer.nextToken();
+    }
 
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
@@ -456,6 +500,19 @@ void Parser::arith_factor()
       ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
       currentToken = lexer.nextToken();
     }
+    else if (currentToken == Token::OPEN_PAR)
+    {
+      currentToken = lexer.nextToken();
+      if (currentToken == Token::CLOSE_PAR)
+      {
+        currentToken = lexer.nextToken();
+      }
+      else
+      {
+        expr_list();
+        currentToken = lexer.nextToken();
+      }
+    }
   }
   else if (currentToken == Token::KW_READ)
   {
@@ -468,6 +525,10 @@ void Parser::arith_factor()
     currentToken = lexer.nextToken();
   }
   else if (currentToken == Token::NUMBER)
+  {
+    currentToken = lexer.nextToken();
+  }
+  else if (currentToken == Token::CLOSE_PAR)
   {
     currentToken = lexer.nextToken();
   }

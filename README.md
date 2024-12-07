@@ -41,3 +41,6 @@ Correr proyecto:
 - (*) multiplicación
 - (/) división
 - (%) módulo
+
+## Print Tokens
+- std::cout << "Current token: " << lexer.tokenText() << std::endl;

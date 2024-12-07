@@ -12,6 +12,7 @@ enum Token
   // KEYWORDS
   KW_CLASS,
   KW_INT,
+  KW_REF,
   KW_IF,
   KW_ELSE,
   KW_WHILE,

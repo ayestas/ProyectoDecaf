@@ -48,6 +48,7 @@ bool Lexer::InputBuffer::fill(size_t need)
 
 const std::string kw_class = "class";
 const std::string kw_int = "int";
+const std::string kw_ref = "ref";
 const std::string kw_if = "if";
 const std::string kw_else = "else";
 const std::string kw_while = "while";
@@ -71,7 +72,7 @@ Token Lexer::nextToken()
 
         end = "\x00";
         wsp = [ \t]+;
-        eol = "\n";
+        eol = "\n" | "\r\n";
 
         // Comentarios
         comment_block = "/*" [^*]* "*" ("*" [^/]* "/*" [^*]* "*")* "/";
@@ -80,6 +81,7 @@ Token Lexer::nextToken()
         // Keywords
         kw_class = "class";
         kw_int = "int";
+        kw_ref = "ref";
         kw_if = "if";
         kw_else = "else";
         kw_while = "while";
@@ -131,6 +133,7 @@ Token Lexer::nextToken()
           text = inbuff.tokenText();
           if (text == kw_class) return Token::KW_CLASS;
           else if (text == kw_int) return Token::KW_INT;
+          else if (text == kw_ref) return Token::KW_REF;
           else if (text == kw_if) return Token::KW_IF;
           else if (text == kw_else) return Token::KW_ELSE;
           else if (text == kw_while) return Token::KW_WHILE;
@@ -143,36 +146,37 @@ Token Lexer::nextToken()
         string { text = inbuff.tokenText(); return Token::STRING_LITERAL; }
 
         comment_block | comment_line { continue; }
-
-        comma         { return Token::COMMA; }
-        semicolon     { return Token::SEMICOLON; }
-        ampersand     { return Token::AMPERSAND; }
-        open_par      { return Token::OPEN_PAR; }
-        close_par     { return Token::CLOSE_PAR; }
-        open_bracket  { return Token::OPEN_BRACKET; }
-        close_bracket { return Token::CLOSE_BRACKET; }
-        open_curly    { return Token::OPEN_CURLY; }
-        close_curly   { return Token::CLOSE_CURLY; }
-        assign        { return Token::ASSIGN; }
+        
+        *             { text = inbuff.tokenText(); return Token::Error; }
+        comma         { text = inbuff.tokenText(); return Token::COMMA; }
+        semicolon     { text = inbuff.tokenText(); return Token::SEMICOLON; }
+        ampersand     { text = inbuff.tokenText(); return Token::AMPERSAND; }
+        open_par      { text = inbuff.tokenText(); return Token::OPEN_PAR; }
+        close_par     { text = inbuff.tokenText(); return Token::CLOSE_PAR; }
+        open_bracket  { text = inbuff.tokenText(); return Token::OPEN_BRACKET; }
+        close_bracket { text = inbuff.tokenText(); return Token::CLOSE_BRACKET; }
+        open_curly    { text = inbuff.tokenText(); return Token::OPEN_CURLY; }
+        close_curly   { text = inbuff.tokenText(); return Token::CLOSE_CURLY; }
+        assign        { text = inbuff.tokenText(); return Token::ASSIGN; }
 
         // Operadores de comparación
-        gt { return Token::GT; }
-        lt { return Token::LT; }
-        get { return Token::GET; }
-        let { return Token::LET; }
-        eq { return Token::EQ; }
-        ne { return Token::NE; }
-        bool_or { return Token::BOOL_OR; }
-        bool_and { return Token::BOOL_AND; }
+        gt        { text = inbuff.tokenText(); return Token::GT; }
+        lt        { text = inbuff.tokenText(); return Token::LT; }
+        get       { text = inbuff.tokenText(); return Token::GET; }
+        let       { text = inbuff.tokenText(); return Token::LET; }
+        eq        { text = inbuff.tokenText(); return Token::EQ; }
+        ne        { text = inbuff.tokenText(); return Token::NE; }
+        bool_or   { text = inbuff.tokenText(); return Token::BOOL_OR; }
+        bool_and  { text = inbuff.tokenText(); return Token::BOOL_AND; }
 
         // Operadores aritméticos
-        op_add { return Token::OP_ADD; }
-        op_sub { return Token::OP_SUB; }
-        op_mul { return Token::OP_MUL; }
-        op_div { return Token::OP_DIV; }
-        op_mod { return Token::OP_MOD; }
+        op_add { text = inbuff.tokenText(); return Token::OP_ADD; }
+        op_sub { text = inbuff.tokenText(); return Token::OP_SUB; }
+        op_mul { text = inbuff.tokenText(); return Token::OP_MUL; }
+        op_div { text = inbuff.tokenText(); return Token::OP_DIV; }
+        op_mod { text = inbuff.tokenText(); return Token::OP_MOD; }
 
-        [ \t\n] { continue; }
+        [ \t] { continue; }
         end     { return (YYMAXFILL == inbuff.lim - inbuff.tok)? Token::Eof : Token::Error; }
         wsp     { continue; }
         eol     { ++line; continue; }

@@ -14,21 +14,19 @@ class ArrayExample {
 
         System.out.println("After swap:");
         printArray(numbers, 5);
-
-        return 0;
     }
 
-    void swap(ref int a, ref int b) {
+    int swap(ref int a, ref int b) {
         int temp;
         temp = a;
         a = b;
         b = temp;
     }
 
-    void printArray(int arr[], int size) {
+    int printArray(ref int arr[], ref int size) {
         int i;
         for (i = 0; i < size; i = i + 1) {
-            System.out.print(arr[i] + " ");
+            System.out.print(arr[i]);
         }
         System.out.println(""); // For new line after the array is printed
     }
