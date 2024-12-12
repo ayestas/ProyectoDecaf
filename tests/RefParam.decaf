@@ -1,17 +1,17 @@
 class Example {
-    int main() {
-        int x, y;
-        x = 10;
-        y = 20;
-        swap(x, y);
-        System.out.print(x);
-        System.out.print(y);
-    }
+  int main() {
+    int x, y;
+    x = 10;
+    y = 20;
+    swap(x, y);
+    System.out.print(x);
+    System.out.print(y);
+  }
 
-    int swap(ref int a, ref int b) {
-        int temp;
-        temp = a;
-        a = b;
-        b = temp;
-    }
+  int swap(ref int a, ref int b) {
+    int temp;
+    temp = a;
+    a = b;
+    b = temp;
+  }
 }

@@ -9,7 +9,7 @@ funcion -> KW_INT IDENT OPEN_PAR param_list CLOSE_PAR
 param_list -> param (COMMA param)*
             | %empty
 
-param -> (KW_REF)* KW_INT IDENT
+param -> (KW_REF)? KW_INT IDENT
 
 var_decl -> KW_INT IDENT array ( COMMA IDENT array )*
 
@@ -22,8 +22,7 @@ declaraciones -> decl_assign SEMICOLON
                | decl_for
                | decl_print SEMICOLON
 
-decl_assign -> IDENT OP_ASSIGN expr
-             | IDENT ( OPEN_BRACKET expr CLOSE_BRACKET )? OP_ASSIGN expr
+decl_assign -> IDENT ( OPEN_BRACKET expr CLOSE_BRACKET )? OP_ASSIGN expr
 
 decl_if ->  KW_IF OPEN_PAR expr CLOSE_PAR
             OPEN_CURLY

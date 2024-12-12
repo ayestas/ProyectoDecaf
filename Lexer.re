@@ -98,7 +98,6 @@ Token Lexer::nextToken()
         // Símbolos
         comma = ",";
         semicolon = ";";
-        ampersand = "&";
         open_par = "(";
         close_par = ")";
         open_bracket = "[";
@@ -150,7 +149,6 @@ Token Lexer::nextToken()
         *             { text = inbuff.tokenText(); return Token::Error; }
         comma         { text = inbuff.tokenText(); return Token::COMMA; }
         semicolon     { text = inbuff.tokenText(); return Token::SEMICOLON; }
-        ampersand     { text = inbuff.tokenText(); return Token::AMPERSAND; }
         open_par      { text = inbuff.tokenText(); return Token::OPEN_PAR; }
         close_par     { text = inbuff.tokenText(); return Token::CLOSE_PAR; }
         open_bracket  { text = inbuff.tokenText(); return Token::OPEN_BRACKET; }

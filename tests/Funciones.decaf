@@ -1,13 +1,13 @@
 class Example {
-    int main() {
-        int x;
-        x = addNumbers();
-        System.out.print(x);
-    }
+  int main() {
+    int x;
+    x = addNumbers();
+    System.out.print(x);
+  }
 
-    int addNumbers() {
-        int a, b;
-        a = 5;
-        b = 3;
-    }
+  int addNumbers() {
+    int a, b;
+    a = 5;
+    b = 3;
+  }
 }

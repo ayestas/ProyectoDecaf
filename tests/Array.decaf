@@ -1,8 +1,8 @@
 class Example {
-    int main() {
-        int arr[5];
-        arr[0] = 1;
-        arr[1] = 2;
-        System.out.print(arr[0]);
-    }
+  int main() {
+    int arr[5];
+    arr[0] = 1;
+    arr[1] = 2;
+    System.out.print(arr[0]);
+  }
 }

@@ -3,6 +3,7 @@
 #include <exception>
 #include "Lexer.hpp"
 #include "Parser.hpp"
+#include "Ast.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -25,8 +26,9 @@ int main(int argc, char *argv[])
 
   try
   {
-    parser.parse();
+    AstNode *prg = parser.parse();
     std::cout << "Sin Errores!" << std::endl;
+    std::cout << prg->toString() << std::endl;
   }
   catch (const std::exception &e)
   {

@@ -1,51 +1,51 @@
 class RelationalOperatorsTest {
-    int main() {
-        int a, b;
-        a = 10;
-        b = 20;
+  int main() {
+    int a, b;
+    a = 10;
+    b = 20;
         
-        System.out.println("Testing relational operators between a = 10 and b = 20:");
+    System.out.println("Testing relational operators between a = 10 and b = 20:");
         
-        // Greater than (>)
-        if (a > b) {
-            System.out.println("a > b");
-        } else {
-            System.out.println("a is not greater than b");
-        }
-
-        // Less than (<)
-        if (a < b) {
-            System.out.println("a < b");
-        } else {
-            System.out.println("a is not less than b");
-        }
-
-        // Greater than or equal to (>=)
-        if (a >= b) {
-            System.out.println("a >= b");
-        } else {
-            System.out.println("a is not greater than or equal to b");
-        }
-
-        // Less than or equal to (<=)
-        if (a <= b) {
-            System.out.println("a <= b");
-        } else {
-            System.out.println("a is not less than or equal to b");
-        }
-
-        // Not equal (!=)
-        if (a != b) {
-            System.out.println("a != b");
-        } else {
-            System.out.println("a is equal to b");
-        }
-
-        // Equal (==)
-        if (a == b) {
-            System.out.println("a == b");
-        } else {
-            System.out.println("a is not equal to b");
-        }
+    // Greater than (>)
+    if (a > b) {
+      System.out.println("a > b");
+    } else {
+      System.out.println("a is not greater than b");
     }
+
+    // Less than (<)
+    if (a < b) {
+      System.out.println("a < b");
+    } else {
+      System.out.println("a is not less than b");
+    }
+
+    // Greater than or equal to (>=)
+    if (a >= b) {
+      System.out.println("a >= b");
+    } else {
+      System.out.println("a is not greater than or equal to b");
+    }
+
+    // Less than or equal to (<=)
+    if (a <= b) {
+      System.out.println("a <= b");
+    } else {
+      System.out.println("a is not less than or equal to b");
+    }
+
+    // Not equal (!=)
+    if (a != b) {
+      System.out.println("a != b");
+    } else {
+      System.out.println("a is equal to b");
+    }
+
+    // Equal (==)
+    if (a == b) {
+      System.out.println("a == b");
+    } else {
+      System.out.println("a is not equal to b");
+    }
+  }
 }

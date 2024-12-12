@@ -3,13 +3,17 @@
 
 Parser::Parser(Lexer &lexer) : lexer(lexer), currentToken(lexer.nextToken()) {}
 
-void Parser::parse()
+AstNode *Parser::parse()
 {
-  programa();
+  AstNode *prog = programa();
+
+  return prog;
 }
 
-void Parser::programa()
+AstNode *Parser::programa()
 {
+  AstNodeList clases;
+
   while (currentToken != Token::Eof)
   {
     if (currentToken == Token::Eol)
@@ -18,15 +22,23 @@ void Parser::programa()
       continue;
     }
 
-    class_declaration();
+    AstNode *clase = class_declaration();
+    clases.push_back(clase);
   }
+
+  return new ProgramaNodo(clases);
 };
 
-void Parser::class_declaration()
+AstNode *Parser::class_declaration()
 {
+  AstNodeList funciones;
+  std::string ident;
+
   if (currentToken == Token::KW_CLASS)
   {
     currentToken = lexer.nextToken();
+
+    ident = currentTokenText();
 
     ErrorEval(Token::IDENT, "Expected identifier");
     currentToken = lexer.nextToken();
@@ -34,13 +46,13 @@ void Parser::class_declaration()
     ErrorEval(Token::OPEN_CURLY, "Expected '{'");
     currentToken = lexer.nextToken();
 
-    funcion();
+    funciones.push_back(funcion());
 
     if (currentToken == Token::KW_INT)
     {
       while (currentToken == Token::KW_INT)
       {
-        funcion();
+        funciones.push_back(funcion());
       }
     }
 
@@ -51,13 +63,22 @@ void Parser::class_declaration()
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected 'class'");
   }
+
+  return new ClaseDeclNodo(new IdentNode(ident, false, false, nullptr), funciones);
 }
 
-void Parser::funcion()
+AstNode *Parser::funcion()
 {
+  std::string ident;
+  AstNode *paramList;
+  AstNodeList varDecls;
+  AstNodeList decls;
+
   if (currentToken == Token::KW_INT)
   {
     currentToken = lexer.nextToken();
+
+    ident = currentTokenText();
 
     ErrorEval(Token::IDENT, "Expected IDENT");
     currentToken = lexer.nextToken();
@@ -65,7 +86,7 @@ void Parser::funcion()
     ErrorEval(Token::OPEN_PAR, "Expected '('");
     currentToken = lexer.nextToken();
 
-    param_list();
+    paramList = param_list();
 
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
@@ -75,14 +96,14 @@ void Parser::funcion()
 
     while (currentToken == Token::KW_INT)
     {
-      var_decl();
+      varDecls.push_back(var_decl());
       ErrorEval(Token::SEMICOLON, "Expected ';'");
       currentToken = lexer.nextToken();
     }
 
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
-      declaraciones();
+      decls.push_back(declaraciones());
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -92,35 +113,46 @@ void Parser::funcion()
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected KW_INT");
   }
+
+  return new FuncionNodo(new IdentNode(ident, false, false, nullptr), paramList, varDecls, decls);
 }
 
-void Parser::param_list()
+AstNode *Parser::param_list()
 {
+  AstNodeList params;
+
   if (currentToken == Token::KW_INT)
   {
-    param();
+    params.push_back(param());
     while (currentToken == Token::COMMA)
     {
       currentToken = lexer.nextToken();
-      param();
+      params.push_back(param());
     }
   }
   else if (currentToken == Token::KW_REF)
   {
     currentToken = lexer.nextToken();
-    param();
+    params.push_back(param());
     while (currentToken == Token::COMMA)
     {
       currentToken = lexer.nextToken();
-      param();
+      params.push_back(param());
     }
   }
+
+  return new ParamListNodo(params);
 }
 
-void Parser::param()
+AstNode *Parser::param()
 {
+  bool isRef = false;
+  bool isArray = false;
+  std::string ident;
+
   if (currentToken == Token::KW_REF)
   {
+    isRef = true;
     currentToken = lexer.nextToken();
 
     ErrorEval(Token::KW_INT, "Expected KW_INT");
@@ -131,28 +163,43 @@ void Parser::param()
     currentToken = lexer.nextToken();
   }
 
+  ident = currentTokenText();
+
   ErrorEval(Token::IDENT, "Expected IDENT");
   currentToken = lexer.nextToken();
   if (currentToken == Token::OPEN_BRACKET)
   {
+    isArray = true;
     currentToken = lexer.nextToken();
     ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
     currentToken = lexer.nextToken();
   }
+
+  return new ParamNodo(isRef, new IdentNode(ident, isArray, false, nullptr));
 }
 
-void Parser::var_decl()
+AstNode *Parser::var_decl()
 {
+  std::string ident;
+  AstNode *identTemp;
+  AstNodeList identList;
+  AstNodeList arrayList;
+  std::vector<bool> isArray;
+
   if (currentToken == Token::KW_INT)
   {
     currentToken = lexer.nextToken();
+
+    ident = currentTokenText();
 
     ErrorEval(Token::IDENT, "Expected IDENT");
     currentToken = lexer.nextToken();
 
     if (currentToken == Token::OPEN_BRACKET)
     {
-      array();
+      identTemp = new IdentNode(ident, true, false, array());
+      arrayList.push_back(identTemp);
+      isArray.push_back(true);
 
       if (currentToken == Token::COMMA)
       {
@@ -160,40 +207,70 @@ void Parser::var_decl()
         {
           currentToken = lexer.nextToken();
 
+          ident = currentTokenText();
+
           ErrorEval(Token::IDENT, "Expected IDENT");
           currentToken = lexer.nextToken();
 
           if (currentToken == Token::OPEN_BRACKET)
           {
-            array();
+            identTemp = new IdentNode(ident, true, false, array());
+            arrayList.push_back(identTemp);
+            isArray.push_back(true);
+          }
+          else
+          {
+            identTemp = new IdentNode(ident, false, false, nullptr);
+            identList.push_back(identTemp);
+            isArray.push_back(false);
           }
         }
       }
     }
     else if (currentToken == Token::COMMA)
     {
+      identTemp = new IdentNode(ident, false, false, nullptr);
+      identList.push_back(identTemp);
+      isArray.push_back(false);
       while (currentToken == Token::COMMA)
       {
         currentToken = lexer.nextToken();
+
+        ident = currentTokenText();
 
         ErrorEval(Token::IDENT, "Expected IDENT");
         currentToken = lexer.nextToken();
 
         if (currentToken == Token::OPEN_BRACKET)
         {
-          array();
+          identTemp = new IdentNode(ident, true, false, array());
+          arrayList.push_back(identTemp);
+          isArray.push_back(true);
+        }
+        else
+        {
+          identTemp = new IdentNode(ident, false, false, nullptr);
+          identList.push_back(identTemp);
+          isArray.push_back(false);
         }
       }
     }
   }
+
+  return new VariableDeclNodo(identList, arrayList, isArray);
 }
 
-void Parser::array()
+AstNode *Parser::array()
 {
+  std::string numero;
+  AstNode *constInt;
+
   currentToken = lexer.nextToken();
 
   if (currentToken == Token::NUMBER || currentToken == Token::IDENT)
   {
+    numero = currentTokenText();
+    constInt = new ConstIntNode(numero);
     currentToken = lexer.nextToken();
   }
   else
@@ -203,76 +280,102 @@ void Parser::array()
 
   ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
   currentToken = lexer.nextToken();
+
+  return new ArrayNodo(constInt);
 }
 
-void Parser::declaraciones()
+AstNode *Parser::declaraciones()
 {
+  AstNode *decl = nullptr;
+  
   switch (currentToken)
   {
   case Token::IDENT:
-    currentToken = lexer.nextToken();
-    if (currentToken == Token::OPEN_PAR)
-    {
-      currentToken = lexer.nextToken();
-      expr_list();
-      ErrorEval(Token::CLOSE_PAR, "Expected ')'");
-      currentToken = lexer.nextToken();
-    }
-    else if (currentToken == Token::OPEN_BRACKET)
-    {
-      currentToken = lexer.nextToken();
-      expr();
-      ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
-      currentToken = lexer.nextToken();
-      decl_assign();
-    }
-    else
-    {
-      decl_assign();
-    }
-    ErrorEval(Token::SEMICOLON, "Expected ';'");
-    currentToken = lexer.nextToken();
+    decl = decl_assign();
     break;
   case Token::KW_IF:
-    decl_if();
+    decl = decl_if();
     break;
   case Token::KW_WHILE:
-    decl_while();
+    decl = decl_while();
     break;
   case Token::KW_FOR:
-    decl_for();
+    decl = decl_for();
     break;
   case Token::KW_SOUT:
-    decl_print();
-    ErrorEval(Token::SEMICOLON, "Expected ';'");
-    currentToken = lexer.nextToken();
+    decl = decl_print(false);
     break;
   case Token::KW_SOUTLN:
-    decl_print();
-    ErrorEval(Token::SEMICOLON, "Expected ';'");
-    currentToken = lexer.nextToken();
+    decl = decl_print(true);
     break;
 
   default:
     break;
   }
+
+  return new Declaraciones(decl);
 }
 
-void Parser::decl_assign()
+AstNode *Parser::decl_assign()
 {
-  ErrorEval(Token::ASSIGN, "Expected '='");
+  std::string ident = currentTokenText();
+  AstNode *e;
+  AstNode *exprArray;
+  AstNode *exprList;
+  bool isArray = false;
+  bool isFuncCall = false;
+
   currentToken = lexer.nextToken();
-  expr();
+  if (currentToken == Token::OPEN_PAR)
+  {
+    currentToken = lexer.nextToken();
+
+    exprList = expr_list();
+    isFuncCall = true;
+
+    ErrorEval(Token::CLOSE_PAR, "Expected ')'");
+    currentToken = lexer.nextToken();
+  }
+  else if (currentToken == Token::OPEN_BRACKET)
+  {
+    currentToken = lexer.nextToken();
+
+    exprArray = expr();
+    isArray = true;
+
+    ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
+    currentToken = lexer.nextToken();
+
+    ErrorEval(Token::ASSIGN, "Expected '='");
+    currentToken = lexer.nextToken();
+
+    e = expr();
+  }
+  else
+  {
+    ErrorEval(Token::ASSIGN, "Expected '='");
+    currentToken = lexer.nextToken();
+
+    e = expr();
+  }
+  ErrorEval(Token::SEMICOLON, "Expected ';'");
+  currentToken = lexer.nextToken();
+
+  return new AsignarDecl(new IdentNode(ident, false, false, nullptr), e, exprArray, exprList, isArray, isFuncCall);
 }
 
-void Parser::decl_if()
+AstNode *Parser::decl_if()
 {
+  AstNode *condicion;
+  AstNodeList ifDecls;
+  AstNodeList elseDecls;
+
   currentToken = lexer.nextToken();
 
   if (currentToken == Token::OPEN_PAR)
   {
     currentToken = lexer.nextToken();
-    expr();
+    condicion = expr();
 
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
@@ -282,7 +385,7 @@ void Parser::decl_if()
 
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
-      declaraciones();
+      ifDecls.push_back(declaraciones());
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -296,7 +399,7 @@ void Parser::decl_if()
       currentToken = lexer.nextToken();
       while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
       {
-        declaraciones();
+        elseDecls.push_back(declaraciones());
       }
 
       ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -307,16 +410,21 @@ void Parser::decl_if()
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected OPEN_PAR");
   }
+
+  return new IfElseDecl(condicion, ifDecls, elseDecls);
 }
 
-void Parser::decl_while()
+AstNode *Parser::decl_while()
 {
+  AstNode *condicion;
+  AstNodeList decls;
+
   currentToken = lexer.nextToken();
 
   if (currentToken == Token::OPEN_PAR)
   {
     currentToken = lexer.nextToken();
-    expr();
+    condicion = expr();
 
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
@@ -326,7 +434,7 @@ void Parser::decl_while()
 
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
-      declaraciones();
+      decls.push_back(declaraciones());
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -336,10 +444,19 @@ void Parser::decl_while()
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected OPEN_PAR");
   }
+
+  return new WhileDecl(condicion, decls);
 }
 
-void Parser::decl_for()
+AstNode *Parser::decl_for()
 {
+  std::string ident;
+  AstNode *condExpr1;
+  AstNode *condExpr2;
+  AstNode *condExpr3;
+  bool hasInt = false;
+  AstNodeList decls;
+
   currentToken = lexer.nextToken();
 
   if (currentToken == Token::OPEN_PAR)
@@ -348,25 +465,29 @@ void Parser::decl_for()
 
     if (currentToken == Token::KW_INT)
     {
+      hasInt = true;
       currentToken = lexer.nextToken();
+
+      ident = currentTokenText();
 
       ErrorEval(Token::IDENT, "Expected IDENT");
       currentToken = lexer.nextToken();
     }
     else if (currentToken == Token::IDENT)
     {
+      ident = currentTokenText();
       currentToken = lexer.nextToken();
     }
 
     ErrorEval(Token::ASSIGN, "Expected '='");
     currentToken = lexer.nextToken();
 
-    expr();
+    condExpr1 = expr();
 
     ErrorEval(Token::SEMICOLON, "Expected ';'");
     currentToken = lexer.nextToken();
 
-    expr();
+    condExpr2 = expr();
 
     ErrorEval(Token::SEMICOLON, "Expected ';'");
     currentToken = lexer.nextToken();
@@ -377,7 +498,7 @@ void Parser::decl_for()
     ErrorEval(Token::ASSIGN, "Expected '='");
     currentToken = lexer.nextToken();
 
-    expr();
+    condExpr3 = expr();
 
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
@@ -387,7 +508,7 @@ void Parser::decl_for()
 
     while (currentToken == Token::IDENT || currentToken == Token::KW_IF || currentToken == Token::KW_WHILE || currentToken == Token::KW_FOR || currentToken == Token::KW_READ || currentToken == Token::KW_SOUT || currentToken == Token::KW_SOUTLN)
     {
-      declaraciones();
+      decls.push_back(declaraciones());
     }
 
     ErrorEval(Token::CLOSE_CURLY, "Expected '}'");
@@ -397,10 +518,16 @@ void Parser::decl_for()
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected OPEN_PAR");
   }
+
+  return new ForDecl(new IdentNode(ident, false, false, nullptr), condExpr1, condExpr2, condExpr3, hasInt, decls);
 }
 
-void Parser::decl_print()
+AstNode *Parser::decl_print(bool line)
 {
+  std::string ident;
+  std::string stringLit;
+  AstNode *arr;
+
   currentToken = lexer.nextToken();
 
   if (currentToken == Token::OPEN_PAR)
@@ -409,15 +536,23 @@ void Parser::decl_print()
 
     if (currentToken == Token::IDENT)
     {
+      ident = currentTokenText();
+
       currentToken = lexer.nextToken();
 
       if (currentToken == Token::OPEN_BRACKET)
       {
-        array();
+        arr = array();
+      }
+      else
+      {
+        arr = nullptr;
       }
     }
     else
     {
+      ident = "";
+      stringLit = currentTokenText();
       ErrorEval(Token::STRING_LITERAL, "Expected STRING");
       currentToken = lexer.nextToken();
     }
@@ -429,90 +564,142 @@ void Parser::decl_print()
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected OPEN_PAR");
   }
+  ErrorEval(Token::SEMICOLON, "Expected ';'");
+  currentToken = lexer.nextToken();
+
+  return new PrintDecl(new IdentNode(ident, false, false, nullptr), arr, new StringLitNode(stringLit), line);
 }
 
-void Parser::expr()
+AstNode *Parser::expr()
 {
-  bool_term();
+  AstNodeList boolTerms;
+
+  boolTerms.push_back(bool_term());
   while (currentToken == Token::BOOL_OR)
   {
     currentToken = lexer.nextToken();
-    bool_term();
+    boolTerms.push_back(bool_term());
   }
+
+  return new ExprNode(boolTerms);
 }
 
-void Parser::bool_term()
+AstNode *Parser::bool_term()
 {
-  rel_expr();
+  AstNodeList relExprs;
+
+  relExprs.push_back(rel_expr());
   while (currentToken == Token::BOOL_AND)
   {
     currentToken = lexer.nextToken();
-    rel_expr();
+    relExprs.push_back(rel_expr());
   }
+
+  return new BoolTermNode(relExprs);
 }
 
-void Parser::rel_expr()
+AstNode *Parser::rel_expr()
 {
-  arith_expr();
+  std::string expr;
+  AstNodeList arithExprs;
+
+  arithExprs.push_back(arith_expr());
   if (currentToken == Token::GT || currentToken == Token::LT || currentToken == Token::GET || currentToken == Token::LET || currentToken == Token::NE || currentToken == Token::EQ)
   {
+    expr = currentTokenText();
     currentToken = lexer.nextToken();
-    arith_expr();
+    arithExprs.push_back(arith_expr());
   }
+
+  return new RelExprNode(arithExprs, expr);
 }
 
-void Parser::arith_expr()
+AstNode *Parser::arith_expr()
 {
-  arith_term();
+  std::string expr;
+  AstNodeList arithTerms;
+
+  arithTerms.push_back(arith_term());
   while (currentToken == Token::OP_ADD || currentToken == Token::OP_SUB)
   {
+    expr = currentTokenText();
     currentToken = lexer.nextToken();
-    arith_term();
+    arithTerms.push_back(arith_term());
   }
+
+  return new ArithExprNode(arithTerms, expr);
 }
 
-void Parser::arith_term()
+AstNode *Parser::arith_term()
 {
-  arith_factor();
+  std::string expr;
+  AstNodeList arithFactors;
+  
+  arithFactors.push_back(arith_factor());
   while (currentToken == Token::OP_MUL || currentToken == Token::OP_DIV || currentToken == Token::OP_MOD)
   {
+    expr = currentTokenText();
     currentToken = lexer.nextToken();
-    arith_factor();
+    arithFactors.push_back(arith_factor());
   }
+
+  return new ArithTermNode(arithFactors, expr);
 }
 
-void Parser::arith_factor()
+AstNode *Parser::arith_factor()
 {
+  AstNode *factor = nullptr;
+
   if (currentToken == Token::OPEN_PAR)
   {
+    AstNode *e;
+    
     currentToken = lexer.nextToken();
-    expr();
+    
+    e = expr();
+
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
+
+    factor = new ParExprNode(e);
   }
   else if (currentToken == Token::IDENT)
   {
+    std::string ident = currentTokenText();
+    bool isArray = false;
+    bool isFuncCall = false;
+    AstNode *e = nullptr;
+
     currentToken = lexer.nextToken();
     if (currentToken == Token::OPEN_BRACKET)
     {
+      isArray = true;
+
       currentToken = lexer.nextToken();
-      expr();
+
+      e = expr();
+      
       ErrorEval(Token::CLOSE_BRACKET, "Expected ']'");
       currentToken = lexer.nextToken();
     }
     else if (currentToken == Token::OPEN_PAR)
     {
+      isFuncCall = true;
+
       currentToken = lexer.nextToken();
+      
       if (currentToken == Token::CLOSE_PAR)
       {
         currentToken = lexer.nextToken();
       }
       else
       {
-        expr_list();
+        e = expr_list();
         currentToken = lexer.nextToken();
       }
     }
+
+    factor = new IdentNode(ident, isArray, isFuncCall, e);
   }
   else if (currentToken == Token::KW_READ)
   {
@@ -523,29 +710,42 @@ void Parser::arith_factor()
 
     ErrorEval(Token::CLOSE_PAR, "Expected ')'");
     currentToken = lexer.nextToken();
+
+    factor = new ReadNode();
   }
   else if (currentToken == Token::NUMBER)
   {
+    std::string numero = currentTokenText();
     currentToken = lexer.nextToken();
+
+    factor = new ConstIntNode(numero);
   }
   else if (currentToken == Token::CLOSE_PAR)
   {
     currentToken = lexer.nextToken();
+
+    factor = new ParEmptyNode();
   }
   else
   {
     throw std::runtime_error("Error at line " + std::to_string(lexer.errLine()) + ": Expected IDENT, INT_LITERAL or '('");
   }
+
+  return new ArithFactorNode(factor);
 }
 
-void Parser::expr_list()
+AstNode *Parser::expr_list()
 {
-  expr();
+  AstNodeList exprList;
+
+  exprList.push_back(expr());
   while (currentToken == Token::COMMA)
   {
     currentToken = lexer.nextToken();
-    expr();
+    exprList.push_back(expr());
   }
+
+  return new ExprListNode(exprList);
 }
 
 // Detecta si el token esperado es igual al token actual, si no lo es, lanza una excepción

@@ -1,27 +1,27 @@
 class ArithmeticOperatorsTest {
-    int main() {
-        int a, b, sum, difference, product, quotient, remainder;
-        a = 15;
-        b = 4;
+  int main() {
+    int a, b, sum, difference, product, quotient, remainder;
+    a = 15;
+    b = 4;
 
-        // Perform arithmetic operations
-        sum = a + b;                // Addition
-        difference = a - b;         // Subtraction
-        product = a * b;            // Multiplication
-        quotient = a / b;           // Division
-        remainder = a % b;          // Modulus
+    // Perform arithmetic operations
+    sum = a + b;                // Addition
+    difference = a - b;         // Subtraction
+    product = a * b;            // Multiplication
+    quotient = a / b;           // Division
+    remainder = a % b;          // Modulus
 
-        // Print results
-        System.out.println("Arithmetic Operations between a = 15 and b = 4:");
-        System.out.print("Sum (a + b) = ");
+    // Print results
+    System.out.println("Arithmetic Operations between a = 15 and b = 4:");
+    System.out.print("Sum (a + b) = ");
 		System.out.println(sum);
-        System.out.print("Difference (a - b) = ");
+    System.out.print("Difference (a - b) = ");
 		System.out.println(difference);
-        System.out.print("Product (a * b) = ");
+    System.out.print("Product (a * b) = ");
 		System.out.println(product);
-        System.out.print("Quotient (a / b) = ");
+    System.out.print("Quotient (a / b) = ");
 		System.out.println(quotient);
-        System.out.print("Remainder (a % b) = ");
+    System.out.print("Remainder (a % b) = ");
 		System.out.println(remainder);
-    }
+  }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Lexer.hpp"
+#include "Ast.hpp"
 #include <stdexcept>
 #include <fstream>
 
@@ -8,31 +9,31 @@ class Parser
 public:
   Parser(Lexer &lex);
 
-  void parse();
+  AstNode *parse();
 
-  void programa();
-  void funcion();
-  void param_list();
-  void param();
-  void var_decl();
-  void array();
-  void declaraciones();
+  AstNode *programa();
+  AstNode *funcion();
+  AstNode *param_list();
+  AstNode *param();
+  AstNode *var_decl();
+  AstNode *array();
+  AstNode *declaraciones();
 
-  void decl_assign();
-  void decl_if();
-  void decl_while();
-  void decl_for();
-  void decl_print();
+  AstNode *decl_assign();
+  AstNode *decl_if();
+  AstNode *decl_while();
+  AstNode *decl_for();
+  AstNode *decl_print(bool line);
 
-  void expr();
-  void bool_term();
-  void rel_expr();
-  void arith_expr();
-  void arith_term();
-  void arith_factor();
-  void expr_list();
+  AstNode *expr();
+  AstNode *bool_term();
+  AstNode *rel_expr();
+  AstNode *arith_expr();
+  AstNode *arith_term();
+  AstNode *arith_factor();
+  AstNode *expr_list();
 
-  void class_declaration();
+  AstNode *class_declaration();
   
   std::string currentTokenText() const
   {

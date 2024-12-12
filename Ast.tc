@@ -1,0 +1,439 @@
+%{
+#include <iostream>
+#include "Ast.hpp"
+%}
+
+%decls %{
+#include <string>
+#include <vector>
+
+class AstNode;
+using AstNodeList = std::vector<AstNode *>;
+using VectorBool = std::vector<bool>;
+using StdString = std::string;
+%}
+
+%option lang = "C++"
+
+%node AstNode %abstract %typedef
+
+%node ProgramaNodo AstNode = {
+  AstNodeList clases;
+}
+
+%node ClaseDeclNodo AstNode = {
+  AstNode *ident;
+  AstNodeList funciones;
+}
+
+%node FuncionNodo AstNode = {
+  AstNode *ident;
+  AstNode *param_list;
+  AstNodeList var_decl;
+  AstNodeList declaraciones;
+}
+
+%node ParamListNodo AstNode = {
+  AstNodeList params;
+}
+
+%node ParamNodo AstNode = {
+  bool isRef;
+  AstNode *ident;
+}
+
+%node VariableDeclNodo AstNode = {
+  AstNodeList ident_list;
+  AstNodeList array_list;
+  VectorBool isArray;
+}
+
+%node ArrayNodo AstNode = {
+  AstNode *numero;
+}
+
+%node AsignarDecl AstNode = {
+  AstNode *ident;
+  AstNode *expr;
+  AstNode *expr_array;
+  AstNode *expr_list;
+  bool isArray;
+  bool isFuncCall;
+}
+
+%node Declaraciones AstNode = {
+  AstNode *decl;
+}
+
+%node IfElseDecl AstNode = {
+  AstNode *condicion;
+  AstNodeList if_decl;
+  AstNodeList else_decl;
+}
+
+%node WhileDecl AstNode = {
+  AstNode *condicion;
+  AstNodeList declaraciones;
+}
+
+%node ForDecl AstNode = {
+  AstNode *ident;
+  AstNode *cond_expr1;
+  AstNode *cond_expr2;
+  AstNode *cond_expr3;
+  bool hasInt;
+  AstNodeList declaraciones;
+}
+
+%node PrintDecl AstNode = {
+  AstNode *ident;
+  AstNode *array;
+  AstNode *string_literal;
+  bool line;
+}
+
+%node ExprNode AstNode = {
+  AstNodeList bool_term;
+}
+
+%node BoolTermNode AstNode = {
+  AstNodeList rel_expr;
+}
+
+%node RelExprNode AstNode = {
+  AstNodeList arith_expr;
+  StdString expr;
+}
+
+%node ArithExprNode AstNode = {
+  AstNodeList arith_term;
+  StdString expr;
+}
+
+%node ArithTermNode AstNode = {
+  AstNodeList arith_factor;
+  StdString expr;
+}
+
+%node ParExprNode AstNode = {
+  AstNode *expr;
+}
+
+%node IdentNode AstNode = {
+  StdString ident;
+  bool isArray;
+  bool isFuncCall;
+  AstNode *expr;
+}
+
+%node ReadNode AstNode
+
+%node ConstIntNode AstNode = {
+  StdString numero;
+}
+
+%node ParEmptyNode AstNode
+
+%node ArithFactorNode AstNode = {
+  AstNode *factor;
+}
+
+%node ExprListNode AstNode = {
+  AstNodeList expr_list;
+}
+
+%node StringLitNode AstNode = {
+  StdString stringLit;
+}
+
+%operation %virtual StdString toString(AstNode *this)
+
+toString(ProgramaNodo) {
+  std::string text;
+  for (const auto c : clases) {
+    text += c->toString();
+  }
+  return text;
+}
+
+toString(ClaseDeclNodo) {
+  std::string text;
+  text += "class " + ident->toString() + "{\n";
+  for (const auto f : funciones) {
+    text += f->toString();
+  }
+  text += "}\n";
+  return text;
+}
+
+toString(FuncionNodo) {
+  std::string text;
+  text += "int " + ident->toString() + "(" + param_list->toString() + ") {";
+  for (const auto v : var_decl) {
+    text += v->toString();
+    text += ";\n";
+  }
+  for (const auto d : declaraciones) {
+    text += d->toString();
+  }
+  text += "}\n";
+  return text;
+}
+
+toString(ParamListNodo) {
+  std::string text;
+  if (params.empty()) {
+    return "";
+  }
+  else {
+    text += params[0]->toString();
+    if (params.size() > 1) {
+      for (int i = 1; i < params.size(); ++i) {
+        text += ", " + params[i]->toString();
+      }
+    }
+  }
+  return text;
+}
+
+toString(ParamNodo) {
+  std::string text;
+  if (isRef) {
+    text += "ref ";
+  }
+  text += "int " + ident->toString();
+  return text;
+}
+
+toString(VariableDeclNodo) {
+  std::string text;
+  int cantArray = 0;
+  text += "int " + ident_list[0]->toString();
+
+  if (isArray[0])
+  {
+    text += array_list[0]->toString();
+    cantArray ++;
+  }
+
+  if (ident_list.size() > 1) {
+    for (int i = 1; i > ident_list.size(); ++i) {
+      text += ", " + ident_list[i]->toString();
+      if (isArray[i]) {
+        text += array_list[cantArray]->toString();
+        cantArray++;
+      }
+    } 
+  }
+
+  return text;
+}
+
+toString(ArrayNodo) {
+  std::string text;
+  text += "[" + numero->toString();
+  text += "]";
+  return text;
+}
+
+toString(Declaraciones) {
+  return decl->toString();
+}
+
+toString(AsignarDecl) {
+  std::string text;
+  text += ident->toString();
+
+  if (isArray) {
+    text += "[" + expr_array->toString() + "] = " + expr->toString();
+  }
+  else if (isFuncCall) {
+    text += "(" + expr_list->toString() + ")";
+  }
+  else {
+    text += " = " + expr->toString();
+  }
+
+  text += ";\n";
+  return text;
+}
+
+toString(IfElseDecl) {
+  std::string text;
+  text += "if (" + condicion->toString() + ") {\n";
+
+  for (const auto i : if_decl) {
+    text += i->toString() + "\n";
+  }
+  text += "} ";
+
+  if (!else_decl.empty()){
+    text += "else {\n";
+    for (const auto e : else_decl) {
+      text += e->toString() + "\n";
+    }
+    text += "}\n";
+  }
+  return text;
+}
+
+toString(WhileDecl) {
+  std::string text;
+  text += "while (" + condicion->toString() + ") {\n";
+
+  for (const auto d : declaraciones) {
+    text += d->toString() + "\n";
+  }
+
+  text += "}\n";
+  return text;
+}
+
+toString(ForDecl) {
+  std::string text;
+  text += "for (";
+
+  if (hasInt) {
+    text += "int ";
+  }
+
+  text += ident->toString() + " = " + cond_expr1->toString() + "; " + cond_expr2->toString() + "; " + ident->toString() + " = " + cond_expr3->toString() + ") {\n";
+
+  for (const auto d : declaraciones) {
+    text += d->toString() + "\n";
+  }
+
+  text += "}\n";
+  return text;
+}
+
+toString(PrintDecl) {
+  std::string text;
+
+  if (line) {
+    text += "System.out.println";
+  }
+  else {
+    text += "System.out.print";
+  }
+
+  text += "(" + ident->toString() + array->toString() + string_literal->toString() + ")";
+  return text;
+}
+
+toString(ExprNode) {
+  std::string text;
+  text += bool_term[0]->toString();
+
+  if (bool_term.size() > 1) {
+    for (int i = 1; i < bool_term.size(); ++i) {
+      text += " || " + bool_term[i]->toString();
+    }
+  }
+
+  return text;
+}
+
+toString(BoolTermNode) {
+  std::string text;
+  text += rel_expr[0]->toString();
+
+  if (rel_expr.size() > 1) {
+    for (int i = 1; i < rel_expr.size(); ++i) {
+      text += " && " + rel_expr[i]->toString();
+    }
+  }
+
+  return text;
+}
+
+toString(RelExprNode) {
+  std::string text;
+  text += arith_expr[0]->toString();
+
+  if (arith_expr.size() > 1) {
+    for (int i = 1; i < arith_expr.size(); ++i) {
+      text += " " + expr + " " + arith_expr[i]->toString();
+    }
+  }
+
+  return text;
+}
+
+toString(ArithExprNode) {
+  std::string text;
+  text += arith_term[0]->toString();
+
+  if (arith_term.size() > 1) {
+    for (int i = 1; i < arith_term.size(); ++i) {
+      text += " " + expr + " " + arith_term[i]->toString();
+    }
+  }
+
+  return text;
+}
+
+toString(ArithTermNode) {
+  std::string text;
+  text += arith_factor[0]->toString();
+
+  if (arith_factor.size() > 1) {
+    for (int i = 1; i < arith_factor.size(); ++i) {
+      text += " " + expr + " " + arith_factor[i]->toString();
+    }
+  }
+
+  return text;
+}
+
+toString(ParExprNode) {
+  std::string text;
+  text += "(" + expr->toString() + ")";
+  return text;
+}
+
+toString(IdentNode) {
+  std::string text;
+  text += ident;
+
+  if (isArray) {
+    text += expr->toString();
+  }
+  else if (isFuncCall) {
+    text += "(" + expr->toString() + ")";
+  }
+
+  return text;
+}
+
+toString(ReadNode) {
+  return "read()";
+}
+
+toString(ConstIntNode) {
+  return numero;
+}
+
+toString(ParEmptyNode) {
+  return ")";
+}
+
+toString(ExprListNode) {
+  std::string text;
+  text += expr_list[0]->toString();
+
+  if (expr_list.size() > 1) {
+    for (int i = 1; i < expr_list.size(); ++i) {
+      text += ", " + expr_list[i]->toString();
+    }
+  }
+  return text;
+}
+
+toString(StringLitNode) {
+  return "\"" + stringLit + "\"";
+}
+
+toString(ArithFactorNode) {
+  return factor->toString();
+}
