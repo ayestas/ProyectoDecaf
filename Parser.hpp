@@ -31,16 +31,18 @@ public:
   AstNode *arith_expr();
   AstNode *arith_term();
   AstNode *arith_factor();
+  AstNode *variable();
   AstNode *expr_list();
 
   AstNode *class_declaration();
-  
+
   std::string currentTokenText() const
   {
     return lexer.tokenText();
   }
 
 private:
+  AstNode *defaultNode, *defaultNode2;
   Lexer &lexer;
   Token currentToken;
   void ErrorEval(Token expectedToken, const std::string &message);

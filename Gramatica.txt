@@ -11,10 +11,7 @@ param_list -> param (COMMA param)*
 
 param -> (KW_REF)? KW_INT IDENT
 
-var_decl -> KW_INT IDENT array ( COMMA IDENT array )*
-
-array -> OPEN_BRACKET CONST_INT CLOSE_BRACKET
-       | %empty
+var_decl -> KW_INT IDENT ( COMMA IDENT )*
 
 declaraciones -> decl_assign SEMICOLON
                | decl_if
@@ -76,6 +73,9 @@ arith_factor -> CONST_INT
                 )?
               | OPEN_PAR expr CLOSE_PAR
               | KW_READ OPEN_PAR CLOSE_PAR
+
+array -> OPEN_BRACKET CONST_INT CLOSE_BRACKET
+       | %empty
 
 expr_list -> expr ( COMMA expr )*
            | %empty

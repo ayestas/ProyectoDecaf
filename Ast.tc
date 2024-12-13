@@ -35,6 +35,7 @@ using StdString = std::string;
 
 %node ParamListNodo AstNode = {
   AstNodeList params;
+  bool isRef;
 }
 
 %node ParamNodo AstNode = {
@@ -44,8 +45,6 @@ using StdString = std::string;
 
 %node VariableDeclNodo AstNode = {
   AstNodeList ident_list;
-  AstNodeList array_list;
-  VectorBool isArray;
 }
 
 %node ArrayNodo AstNode = {
@@ -55,10 +54,7 @@ using StdString = std::string;
 %node AsignarDecl AstNode = {
   AstNode *ident;
   AstNode *expr;
-  AstNode *expr_array;
-  AstNode *expr_list;
-  bool isArray;
-  bool isFuncCall;
+  bool isAssign;
 }
 
 %node Declaraciones AstNode = {
@@ -86,9 +82,7 @@ using StdString = std::string;
 }
 
 %node PrintDecl AstNode = {
-  AstNode *ident;
-  AstNode *array;
-  AstNode *string_literal;
+  AstNode *expr;
   bool line;
 }
 
@@ -122,7 +116,9 @@ using StdString = std::string;
 %node IdentNode AstNode = {
   StdString ident;
   bool isArray;
+  bool isEmptyArray;
   bool isFuncCall;
+  bool isEmptyFuncCall;
   AstNode *expr;
 }
 
@@ -158,7 +154,7 @@ toString(ProgramaNodo) {
 
 toString(ClaseDeclNodo) {
   std::string text;
-  text += "class " + ident->toString() + "{\n";
+  text += "class " + ident->toString() + " {\n";
   for (const auto f : funciones) {
     text += f->toString();
   }
@@ -168,7 +164,7 @@ toString(ClaseDeclNodo) {
 
 toString(FuncionNodo) {
   std::string text;
-  text += "int " + ident->toString() + "(" + param_list->toString() + ") {";
+  text += "int " + ident->toString() + "(" + param_list->toString() + ") {\n";
   for (const auto v : var_decl) {
     text += v->toString();
     text += ";\n";
@@ -186,6 +182,10 @@ toString(ParamListNodo) {
     return "";
   }
   else {
+    if (isRef) {
+      text += "ref ";
+    }
+
     text += params[0]->toString();
     if (params.size() > 1) {
       for (int i = 1; i < params.size(); ++i) {
@@ -207,23 +207,12 @@ toString(ParamNodo) {
 
 toString(VariableDeclNodo) {
   std::string text;
-  int cantArray = 0;
+
   text += "int " + ident_list[0]->toString();
-
-  if (isArray[0])
-  {
-    text += array_list[0]->toString();
-    cantArray ++;
-  }
-
   if (ident_list.size() > 1) {
-    for (int i = 1; i > ident_list.size(); ++i) {
+    for (int i = 1; i < ident_list.size(); ++i) {
       text += ", " + ident_list[i]->toString();
-      if (isArray[i]) {
-        text += array_list[cantArray]->toString();
-        cantArray++;
-      }
-    } 
+    }
   }
 
   return text;
@@ -242,19 +231,14 @@ toString(Declaraciones) {
 
 toString(AsignarDecl) {
   std::string text;
-  text += ident->toString();
 
-  if (isArray) {
-    text += "[" + expr_array->toString() + "] = " + expr->toString();
-  }
-  else if (isFuncCall) {
-    text += "(" + expr_list->toString() + ")";
+  if (isAssign) {
+    text += ident->toString() + " = " + expr->toString( ) + ";\n";
   }
   else {
-    text += " = " + expr->toString();
+    text += ident->toString() + ";\n";
   }
-
-  text += ";\n";
+  
   return text;
 }
 
@@ -263,14 +247,14 @@ toString(IfElseDecl) {
   text += "if (" + condicion->toString() + ") {\n";
 
   for (const auto i : if_decl) {
-    text += i->toString() + "\n";
+    text += i->toString();
   }
   text += "} ";
 
   if (!else_decl.empty()){
     text += "else {\n";
     for (const auto e : else_decl) {
-      text += e->toString() + "\n";
+      text += e->toString();
     }
     text += "}\n";
   }
@@ -282,7 +266,7 @@ toString(WhileDecl) {
   text += "while (" + condicion->toString() + ") {\n";
 
   for (const auto d : declaraciones) {
-    text += d->toString() + "\n";
+    text += d->toString();
   }
 
   text += "}\n";
@@ -300,7 +284,7 @@ toString(ForDecl) {
   text += ident->toString() + " = " + cond_expr1->toString() + "; " + cond_expr2->toString() + "; " + ident->toString() + " = " + cond_expr3->toString() + ") {\n";
 
   for (const auto d : declaraciones) {
-    text += d->toString() + "\n";
+    text += d->toString();
   }
 
   text += "}\n";
@@ -317,7 +301,7 @@ toString(PrintDecl) {
     text += "System.out.print";
   }
 
-  text += "(" + ident->toString() + array->toString() + string_literal->toString() + ")";
+  text += "(" + expr->toString() + ");\n";
   return text;
 }
 
@@ -397,10 +381,16 @@ toString(IdentNode) {
   text += ident;
 
   if (isArray) {
-    text += expr->toString();
+    text += "[" + expr->toString() + "]";
+  }
+  else if (isEmptyArray) {
+    text += "[]";
   }
   else if (isFuncCall) {
     text += "(" + expr->toString() + ")";
+  }
+  else if (isEmptyFuncCall) {
+    text += "()";
   }
 
   return text;
@@ -431,7 +421,7 @@ toString(ExprListNode) {
 }
 
 toString(StringLitNode) {
-  return "\"" + stringLit + "\"";
+  return stringLit;
 }
 
 toString(ArithFactorNode) {

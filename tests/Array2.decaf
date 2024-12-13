@@ -26,7 +26,7 @@ class ArrayExample {
   int printArray(ref int arr[], ref int size) {
     int i;
     for (i = 0; i < size; i = i + 1) {
-        System.out.print(arr[i]);
+      System.out.print(arr[i]);
     }
     System.out.println("");
   }
